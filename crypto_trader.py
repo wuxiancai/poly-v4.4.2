@@ -3245,16 +3245,6 @@ class CryptoTrader:
                     coin_new_weekly_url = self.find_new_weekly_url(coin)
                     
                     if coin_new_weekly_url:
-                        # 确保我们从原始窗口开始
-                        try:
-                            if not self.original_window:  # 新增空值检查
-                                raise Exception("原始窗口未初始化")
-                            self.driver.switch_to.window(self.original_window)
-                        except Exception as e:
-                            self.logger.error(f"切换到原始窗口失败: {str(e)}")
-                            # 如果原始窗口不可用，可能需要重新创建一个窗口
-                            self.driver.switch_to.new_window('tab')
-                            self.original_window = self.driver.current_window_handle
                         
                         # 打开新标签页
                         self.driver.switch_to.new_window('tab')
@@ -3281,9 +3271,7 @@ class CryptoTrader:
                             self.config['website']['url'] = coin_new_weekly_url
                             self.save_config()
                             self.logger.info(f"✅ {coin}:符合要求,已保存到 config")
-                            
-                            # 监控当前窗口
-                            
+
                             # 把保存到config的url放到self.url_entry中
                             # 保存前,先清楚现有的url
                             self.url_entry.delete(0, tk.END)
@@ -3293,9 +3281,7 @@ class CryptoTrader:
 
                             self.start_url_monitoring()
                             self.refresh_page()
-                            
                             self.stop_auto_find_coin()
-                            
                         # 获取Yes和No的价格
                         prices = self.driver.execute_script("""
                             function getPrices() {
