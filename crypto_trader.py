@@ -1370,7 +1370,7 @@ class CryptoTrader:
             # 计算 MetaMask 弹窗的 "连接" 按钮位置
             connect_button_x = screen_width - 95  # 按钮位于屏幕右侧，稍微向左偏移范围 92-120
             connect_button_y = 600  # 观察图片后估算按钮的Y坐标,范围 590-620
-            time.sleep(1)
+            time.sleep(2)
             # 点击 "连接" 按钮
             pyautogui.click(connect_button_x, connect_button_y) 
             
@@ -1378,7 +1378,7 @@ class CryptoTrader:
             confirm_button_x = screen_width - 95  # 同样靠右对齐
             confirm_button_y = 600  # "确认" 按钮通常在下方
 
-            time.sleep(1)
+            time.sleep(2)
             pyautogui.click(confirm_button_x, confirm_button_y)  # 点击 "确认" 按钮
 
             # 直接执行click_accept_button
@@ -3419,7 +3419,7 @@ class CryptoTrader:
 
             # 重置所有按钮样式为蓝色
             for btn in [self.btc_button, self.eth_button, self.solana_button, 
-                    self.xrp_button, self.doge_button]:
+                    self.xrp_button]:
                 btn.configure(style='Blue.TButton')
             
             # 设置被点击的按钮为红色
@@ -3431,7 +3431,6 @@ class CryptoTrader:
                 self.solana_button.configure(style='Red.TButton')
             elif coin == 'XRP':
                 self.xrp_button.configure(style='Red.TButton')
-            
 
             base_url = "https://polymarket.com/markets/crypto?_s=start_date%3Adesc"
             self.driver.switch_to.new_window('tab')
