@@ -3241,10 +3241,6 @@ class CryptoTrader:
                 'XRP'
             ]
             for coin in coins:
-                if self.stop_auto_find_running:
-                    self.logger.info("找币过程中检测到停止标志，中断操作")
-                    break
-
                 try:  # 为每个币种添加单独的异常处理
                     coin_new_weekly_url = self.find_new_weekly_url(coin)
                     
