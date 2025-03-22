@@ -1361,25 +1361,26 @@ class CryptoTrader:
             # 使用 XPath 定位并点击 MetaMask 按钮
             metamask_button = self._find_element_with_retry(XPathConfig.METAMASK_BUTTON)
             metamask_button.click()
-            time.sleep(2)
-
+            
+            """屏幕分辨率必须设置为 1920*1080"""
             # 获取主屏幕的宽度和高度
-            monitor = get_monitors()[0]  # 假设 Chrome 在主屏幕
+            monitor = get_monitors()[0]  # 获取主屏幕信息
+            self.logger.info(f"{monitor}")
             screen_width, screen_height = monitor.width, monitor.height
 
-            # 估算 连接 按钮的坐标（相对于 Chrome 窗口）
-            connect_button_x = screen_width - 90  # 距离屏幕右侧约200像素
-            connect_button_y =  screen_height - 340  # 距离屏幕底部约150像素
+            # 计算 MetaMask 弹窗的 "连接" 按钮位置
+            connect_button_x = screen_width - 95  # 按钮位于屏幕右侧，稍微向左偏移范围 92-120
+            connect_button_y = 600  # 观察图片后估算按钮的Y坐标,范围 590-620
+            time.sleep(1)
+            # 点击 "连接" 按钮
+            pyautogui.click(connect_button_x, connect_button_y) 
+            
+            # 计算 "确认" 按钮位置
+            confirm_button_x = screen_width - 95  # 同样靠右对齐
+            confirm_button_y = 600  # "确认" 按钮通常在下方
 
-            time.sleep(1)  # 等待 MetaMask 弹窗打开
-            pyautogui.click(connect_button_x, connect_button_y)  # 点击"连接"按钮
-                        
-            # 估算 确认 按钮的坐标（相对于 Chrome 窗口）
-            confirm_button_x = screen_width - 90  # 距离屏幕右侧约200像素
-            confirm_button_y =  screen_height - 340  # 距离屏幕底部约150像素
-
-            time.sleep(1)  # 等待 MetaMask 弹窗打开
-            pyautogui.click(confirm_button_x, confirm_button_y)  # 点击"确认"按钮
+            time.sleep(1)
+            pyautogui.click(confirm_button_x, confirm_button_y)  # 点击 "确认" 按钮
 
             # 直接执行click_accept_button
             self.logger.info("✅ 登录完成,执行click_accept_button")
