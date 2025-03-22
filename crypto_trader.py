@@ -943,7 +943,7 @@ class CryptoTrader:
                 try:
                     self.check_balance()
                     self.check_prices()
-                    time.sleep(3)
+                    time.sleep(2)
                 except Exception as e:
                     if not self.stop_event.is_set():  # 仅在未停止时记录错误
                         self.logger.error(f"监控失败: {str(e)}")
@@ -1361,11 +1361,10 @@ class CryptoTrader:
             # 使用 XPath 定位并点击 MetaMask 按钮
             metamask_button = self._find_element_with_retry(XPathConfig.METAMASK_BUTTON)
             metamask_button.click()
-            
+
             """屏幕分辨率必须设置为 1920*1080"""
             # 获取主屏幕的宽度和高度
             monitor = get_monitors()[0]  # 获取主屏幕信息
-            self.logger.info(f"{monitor}")
             screen_width, screen_height = monitor.width, monitor.height
 
             # 计算 MetaMask 弹窗的 "连接" 按钮位置
@@ -1475,25 +1474,8 @@ class CryptoTrader:
     """以上代码执行了登录操作的函数,直到第 1315 行,程序执行返回到 748 行"""
    
     """以下代码是监控买卖条件及执行交易的函数,程序开始进入交易阶段,从 1321 行直到第 2500 行"""  
-    
-    def find_accpet_button(self):
-        """重新登录后,需要在amount输入框输入1并确认"""
-        
-        try:
-            accept_button = self.driver.find_element(By.XPATH, XPathConfig.ACCEPT_BUTTON)
-            return True
-        except Exception as e:
-            accept_button = self._find_element_with_retry(
-                XPathConfig.ACCEPT_BUTTON,
-                timeout=3,
-                silent=True
-            )
-            return True
-
     def First_trade(self):
         try:
-            
-            
             if self.find_login_button():
                 self.logger.warning("检测到❌未登录状态，执行登录")
                 self.check_and_handle_login()
@@ -1638,7 +1620,6 @@ class CryptoTrader:
     def Second_trade(self):
         """处理Yes2/No2的自动交易"""
         try:
-            
             if self.find_login_button():
                 self.logger.warning("检测到❌未登录状态，执行登录")
                 self.check_and_handle_login()
@@ -1765,11 +1746,9 @@ class CryptoTrader:
         finally:
             self.trading = False
             
-
     def Third_trade(self):
         """处理Yes3/No3的自动交易"""
         try:
-           
             if self.find_login_button():
                 self.logger.warning("检测到❌未登录状态，执行登录")
                 self.check_and_handle_login()
@@ -1895,11 +1874,9 @@ class CryptoTrader:
         finally:
             self.trading = False
             
-
     def Forth_trade(self):
         """处理Yes4/No4的自动交易"""
         try:
-            
             if self.find_login_button():
                 self.logger.warning("检测到❌未登录状态，执行登录")
                 self.check_and_handle_login()
@@ -2032,12 +2009,9 @@ class CryptoTrader:
         finally:
             self.trading = False
             
-
     def Sell_yes(self):
         """当YES5价格等于实时Yes价格时自动卖出"""
         try:
-            
-            
             if self.find_login_button():
                 self.logger.warning("检测到❌未登录状态，执行登录")
                 self.check_and_handle_login()
@@ -2107,11 +2081,9 @@ class CryptoTrader:
         finally:
             self.trading = False
             
-
     def Sell_no(self):
         """当NO4价格等于实时No价格时自动卖出"""
         try:
-            
             if self.find_login_button():
                 self.logger.warning("检测到❌未登录状态，执行登录")
                 self.check_and_handle_login()
@@ -2182,7 +2154,6 @@ class CryptoTrader:
         finally:
             self.trading = False
             
-
     def only_sell_yes(self):
         """只卖出YES"""
         # 获取当前价格
@@ -2778,29 +2749,21 @@ class CryptoTrader:
     def _handle_metamask_popup(self):
         """处理 MetaMask 扩展弹窗的键盘操作"""
         try:
-            # 直接等待一段时间让MetaMask扩展弹窗出现
-            time.sleep(2)
-            # 模拟键盘操作序列
-            # 1. 按6次TAB
-            for _ in range(6):
-                pyautogui.press('tab')
-                time.sleep(0.1)  # 每次按键之间添加短暂延迟
-            # 2. 按1次ENTER
-            pyautogui.press('enter')
-            time.sleep(0.1)  # 等待第一次确认响应
-            # 3. 按2次TAB
-            for _ in range(2):
-                pyautogui.press('tab')
-                time.sleep(0.1)
-            # 4. 按1次ENTER
-            pyautogui.press('enter')
-            # 等待弹窗自动关闭
-            time.sleep(0.3)
-            self.logger.info("MetaMask 扩展弹窗操作完成")
+            """屏幕分辨率必须设置为 1920*1080"""
+            # 获取主屏幕的宽度和高度
+            monitor = get_monitors()[0]  # 获取主屏幕信息
+            screen_width, screen_height = monitor.width, monitor.height
+
+            # 计算 "确认" 按钮位置
+            confirm_button_x = screen_width - 95  # 同样靠右对齐
+            confirm_button_y = 600  # "确认" 按钮通常在下方
+            # 点击 "确认" 按钮
+            time.sleep(1)
+            pyautogui.click(confirm_button_x, confirm_button_y)  
+
         except Exception as e:
             error_msg = f"处理 MetaMask 扩展弹窗失败: {str(e)}"
             self.logger.error(error_msg)
-            self.update_status(error_msg)
             raise
 
     def sleep_refresh(self, operation_name="未指定操作"):
