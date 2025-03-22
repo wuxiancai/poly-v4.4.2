@@ -13,6 +13,7 @@ import json
 import threading
 import time
 import os
+from screeninfo import get_monitors
 import pytesseract
 import logging
 from datetime import datetime, timezone, timedelta
@@ -1321,7 +1322,7 @@ class CryptoTrader:
         """在单独线程中执行登录检查"""
         try:
             try:
-                self.driver.refresh()
+                
                 time.sleep(3)
                 if self.find_login_button():
                     self.logger.warning("检测到❌未登录状态，执行登录")
@@ -1362,99 +1363,23 @@ class CryptoTrader:
             metamask_button.click()
             time.sleep(2)
 
-            # 使用OpenCV识别和处理MetaMask弹窗
-            max_attempts = 5
-            for attempt in range(max_attempts):
-                # 截取屏幕
-                screen = pyautogui.screenshot()
-                screen_np = np.array(screen)
-                screen_bgr = cv2.cvtColor(screen_np, cv2.COLOR_RGB2BGR)
-                
-                # 检查是否包含"欢迎回来!"
-                text = pytesseract.image_to_string(screen, lang='chi_sim')
-                if "欢迎回来" in text:
-                    self.logger.info("检测到MetaMask登录窗口,显示'欢迎回来!'")
-                    # 输入密码
-                    pyautogui.write("noneboy780308")
-                    time.sleep(0.5)
-                    # 按下Enter键
-                    pyautogui.press('enter')
-                    time.sleep(2)
-                    break
-                
-                # 先使用OCR识别包含"连接"的文字
-                text = pytesseract.image_to_string(screen, lang='chi_sim')
-                connect_text_found = "连接" in text
-                
-                if connect_text_found:
-                    self.logger.info("检测到包含'连接'的文字")
-                    # 保存调试图像
-                    cv2.imwrite(f"/Users/wuwei/poly-v8.1/connect_text_found_{time.time()}.png", screen_bgr)
-                    
-                    # 尝试识别蓝色的"连接"按钮
-                    connect_button_pos = self._find_blue_button_with_text(screen_bgr, "连接")
-                    if connect_button_pos:
-                        x, y = connect_button_pos
-                        self.logger.info(f"找到蓝色'连接'按钮位置: ({x}, {y})")
+            # 获取主屏幕的宽度和高度
+            monitor = get_monitors()[0]  # 假设 Chrome 在主屏幕
+            screen_width, screen_height = monitor.width, monitor.height
+
+            # 估算 连接 按钮的坐标（相对于 Chrome 窗口）
+            connect_button_x = screen_width - 90  # 距离屏幕右侧约200像素
+            connect_button_y =  screen_height - 340  # 距离屏幕底部约150像素
+
+            time.sleep(1)  # 等待 MetaMask 弹窗打开
+            pyautogui.click(connect_button_x, connect_button_y)  # 点击"连接"按钮
                         
-                        # 多次点击以确保成功
-                        for _ in range(3):
-                            pyautogui.click(x, y)
-                            time.sleep(0.2)
-                        
-                        self.logger.info("已多次点击'连接'按钮")
-                        time.sleep(2)  # 增加等待时间
-                        
-                        # 再次截图寻找确认按钮
-                        confirm_screen = pyautogui.screenshot()
-                        confirm_screen_np = np.array(confirm_screen)
-                        confirm_screen_bgr = cv2.cvtColor(confirm_screen_np, cv2.COLOR_RGB2BGR)
-                        
-                        # 保存确认按钮截图用于调试
-                        cv2.imwrite(f"/Users/wuwei/poly-v8.1/confirm_screen_{time.time()}.png", confirm_screen_bgr)
-                        
-                        # 使用OCR识别包含"确认"的文字
-                        confirm_text = pytesseract.image_to_string(confirm_screen, lang='chi_sim')
-                        if "确认" in confirm_text:
-                            self.logger.info("检测到包含'确认'的文字")
-                            
-                            # 尝试识别确认按钮
-                            confirm_button_pos = self._find_blue_button_with_text(confirm_screen_bgr, "确认")
-                            if confirm_button_pos:
-                                x, y = confirm_button_pos
-                                self.logger.info(f"找到蓝色'确认'按钮位置: ({x}, {y})")
-                                
-                                # 多次点击以确保成功
-                                for _ in range(3):
-                                    pyautogui.click(x, y)
-                                    time.sleep(0.2)
-                                
-                                self.logger.info("已多次点击'确认'按钮")
-                                time.sleep(2)
-                                break
-                else:
-                    # 如果没有找到"连接"文字，尝试寻找"确认"文字
-                    if "确认" in text:
-                        self.logger.info("检测到包含'确认'的文字")
-                        
-                        # 尝试识别确认按钮
-                        confirm_button_pos = self._find_blue_button_with_text(screen_bgr, "确认")
-                        if confirm_button_pos:
-                            x, y = confirm_button_pos
-                            self.logger.info(f"找到蓝色'确认'按钮位置: ({x}, {y})")
-                            
-                            # 多次点击以确保成功
-                            for _ in range(3):
-                                pyautogui.click(x, y)
-                                time.sleep(0.2)
-                            
-                            self.logger.info("已多次点击'确认'按钮")
-                            time.sleep(2)
-                            break
-                
-                # 如果没有找到相关按钮，等待后重试
-                self.logger.info(f"第{attempt+1}次尝试未找到登录相关按钮，等待后重试")
-                time.sleep(1)
+            # 估算 确认 按钮的坐标（相对于 Chrome 窗口）
+            confirm_button_x = screen_width - 90  # 距离屏幕右侧约200像素
+            confirm_button_y =  screen_height - 340  # 距离屏幕底部约150像素
+
+            time.sleep(1)  # 等待 MetaMask 弹窗打开
+            pyautogui.click(confirm_button_x, confirm_button_y)  # 点击"确认"按钮
 
             # 直接执行click_accept_button
             self.logger.info("✅ 登录完成,执行click_accept_button")
@@ -1467,176 +1392,6 @@ class CryptoTrader:
             self.logger.error(f"登录操作失败: {str(e)}")
             return False
 
-    def _find_blue_button(self, image):
-        """
-        在图像中查找蓝色按钮
-        返回按钮中心点坐标或None
-        """
-        try:
-            # 定义蓝色范围 (BGR格式)
-            lower_blue = np.array([170, 100, 50])  # 深蓝色下限
-            upper_blue = np.array([255, 180, 100])  # 深蓝色上限
-            
-            # 创建蓝色掩码
-            mask = cv2.inRange(image, lower_blue, upper_blue)
-            
-            # 查找轮廓
-            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            
-            # 按面积排序轮廓（从大到小）
-            contours = sorted(contours, key=cv2.contourArea, reverse=True)
-            
-            # 查找符合条件的轮廓（面积适中的矩形）
-            for contour in contours:
-                area = cv2.contourArea(contour)
-                # 按钮面积通常在一定范围内
-                if 2000 < area < 50000:  # 根据实际按钮大小调整
-                    x, y, w, h = cv2.boundingRect(contour)
-                    # 按钮通常是矩形，宽高比在一定范围内
-                    aspect_ratio = float(w) / h
-                    if 2.0 < aspect_ratio < 6.0:  # 根据实际按钮形状调整
-                        # 返回按钮中心点
-                        return (x + w // 2, y + h // 2)
-            
-            # 如果没有找到符合条件的按钮，尝试放宽条件
-            for contour in contours:
-                area = cv2.contourArea(contour)
-                if area > 1000:  # 只要面积足够大
-                    x, y, w, h = cv2.boundingRect(contour)
-                    return (x + w // 2, y + h // 2)
-                    
-            return None
-        except Exception as e:
-            self.logger.error(f"查找蓝色按钮时出错: {str(e)}")
-            return None
-
-    def _find_blue_button_with_text(self, image, target_text):
-        """
-        在图像中查找同时满足蓝色和包含特定文字的按钮
-        target_text: 目标文字，如"连接"或"确认"
-        返回按钮中心点坐标或None
-        """
-        try:
-            # 使用OCR识别文字区域
-            d = pytesseract.image_to_data(image, lang='chi_sim', output_type=pytesseract.Output.DICT)
-            
-            # 保存带文字框的调试图像
-            debug_img = image.copy()
-            
-            text_regions = []
-            for i in range(len(d['text'])):
-                if target_text in d['text'][i]:
-                    x = d['left'][i]
-                    y = d['top'][i]
-                    w = d['width'][i]
-                    h = d['height'][i]
-                    
-                    # 扩大搜索区域，因为按钮通常比文字区域大
-                    x_expanded = max(0, x - 100)  # 扩大左侧搜索范围
-                    y_expanded = max(0, y - 30)   # 扩大上方搜索范围
-                    w_expanded = w + 200          # 扩大宽度搜索范围
-                    h_expanded = h + 60           # 扩大高度搜索范围
-                    
-                    text_regions.append((x_expanded, y_expanded, w_expanded, h_expanded))
-                    
-                    # 在调试图像上标记文字区域
-                    cv2.rectangle(debug_img, (x, y), (x+w, y+h), (0, 255, 0), 2)
-                    cv2.rectangle(debug_img, (x_expanded, y_expanded), 
-                                 (x_expanded+w_expanded, y_expanded+h_expanded), (255, 0, 0), 2)
-            
-            # 保存调试图像
-            cv2.imwrite(f"/Users/wuwei/poly-v8.1/text_regions_{target_text}_{time.time()}.png", debug_img)
-            
-            if not text_regions:
-                self.logger.warning(f"未找到包含'{target_text}'的文字区域")
-                return None
-            
-            # 根据截图调整蓝色范围 (BGR格式)
-            # MetaMask按钮是亮蓝色，调整为更广泛的蓝色范围
-            lower_blue = np.array([170, 120, 0])   # 调整蓝色下限
-            upper_blue = np.array([255, 255, 150]) # 调整蓝色上限
-            
-            # 创建蓝色掩码
-            mask = cv2.inRange(image, lower_blue, upper_blue)
-            
-            # 保存掩码图像用于调试
-            cv2.imwrite(f"/Users/wuwei/poly-v8.1/mask_{target_text}_{time.time()}.png", mask)
-            
-            # 查找轮廓
-            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            
-            # 按面积排序轮廓（从大到小）
-            contours = sorted(contours, key=cv2.contourArea, reverse=True)
-            
-            # 保存带轮廓的图像用于调试
-            contour_img = image.copy()
-            cv2.drawContours(contour_img, contours, -1, (0, 255, 0), 2)
-            cv2.imwrite(f"/Users/wuwei/poly-v8.1/contours_{target_text}_{time.time()}.png", contour_img)
-            
-            # 查找与文字区域重叠的蓝色轮廓
-            for region in text_regions:
-                rx, ry, rw, rh = region
-                region_rect = (rx, ry, rx+rw, ry+rh)
-                
-                for contour in contours:
-                    area = cv2.contourArea(contour)
-                    # 放宽按钮面积范围
-                    if 500 < area < 50000:  # 调整面积范围，更宽松
-                        x, y, w, h = cv2.boundingRect(contour)
-                        contour_rect = (x, y, x+w, y+h)
-                        
-                        # 检查轮廓是否与文字区域重叠
-                        if self._rectangles_overlap(region_rect, contour_rect):
-                            # 记录找到的按钮信息
-                            self.logger.info(f"找到包含'{target_text}'的蓝色按钮: 面积={area}, 位置=({x},{y}), 尺寸={w}x{h}")
-                            
-                            # 在调试图像上标记找到的按钮
-                            button_img = image.copy()
-                            cv2.rectangle(button_img, (x, y), (x+w, y+h), (0, 0, 255), 2)
-                            cv2.circle(button_img, (x + w // 2, y + h // 2), 5, (0, 255, 255), -1)
-                            cv2.imwrite(f"/Users/wuwei/poly-v8.1/found_button_{target_text}_{time.time()}.png", button_img)
-                            
-                            # 返回按钮中心点
-                            return (x + w // 2, y + h // 2)
-            
-            # 如果没有找到与文字区域重叠的按钮，尝试直接查找蓝色区域
-            self.logger.warning(f"未找到与'{target_text}'文字区域重叠的蓝色按钮，尝试直接查找蓝色区域")
-            
-            # 直接查找最大的蓝色区域
-            if contours:
-                largest_contour = contours[0]
-                area = cv2.contourArea(largest_contour)
-                if area > 500:  # 只要面积足够大
-                    x, y, w, h = cv2.boundingRect(largest_contour)
-                    self.logger.info(f"找到最大蓝色区域: 面积={area}, 位置=({x},{y}), 尺寸={w}x{h}")
-                    
-                    # 在调试图像上标记找到的区域
-                    fallback_img = image.copy()
-                    cv2.rectangle(fallback_img, (x, y), (x+w, y+h), (255, 0, 0), 2)
-                    cv2.circle(fallback_img, (x + w // 2, y + h // 2), 5, (0, 255, 255), -1)
-                    cv2.imwrite(f"/Users/wuwei/poly-v8.1/fallback_button_{target_text}_{time.time()}.png", fallback_img)
-                    
-                    return (x + w // 2, y + h // 2)
-            
-            self.logger.warning(f"未找到任何可能的'{target_text}'按钮")
-            return None
-        except Exception as e:
-            self.logger.error(f"查找包含'{target_text}'的蓝色按钮时出错: {str(e)}")
-            return None
-    
-    def _rectangles_overlap(self, rect1, rect2):
-        """
-        检查两个矩形是否重叠
-        rect格式: (x1, y1, x2, y2)，其中(x1,y1)是左上角，(x2,y2)是右下角
-        """
-        x1_1, y1_1, x2_1, y2_1 = rect1
-        x1_2, y1_2, x2_2, y2_2 = rect2
-        
-        # 检查一个矩形是否完全在另一个矩形的右侧、左侧、下方或上方
-        if x1_1 > x2_2 or x2_1 < x1_2 or y1_1 > y2_2 or y2_1 < y1_2:
-            return False
-        return True
-    
     def click_accept_button(self):
         """重新登录后,需要在amount输入框输入1并确认"""
         self.logger.info("开始执行click_accept_button")

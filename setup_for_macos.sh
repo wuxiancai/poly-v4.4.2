@@ -75,6 +75,7 @@ pip3 install --no-cache-dir opencv-python-headless  # 安装headless版本，通
 pip3 install --no-cache-dir pillow 
 pip3 install --no-cache-dir pytesseract
 pip3 install --no-cache-dir numpy
+pip3 install --no-cache-dir screeninfo
 
 # 配置 Python 环境变量 (避免重复添加)
 echo "配置环境变量..."
