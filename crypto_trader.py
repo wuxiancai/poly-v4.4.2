@@ -1431,14 +1431,13 @@ class CryptoTrader:
             self.refresh_page_running = True
             try:
                 if self.running and self.driver and not self.trading:
-                    self.refresh_page_timer = self.root.after(1000, self.driver.refresh)
+                    self.driver.refresh()
                     self.logger.info(f"✅ 定时刷新成功")      
                 else:
                     self.logger.info("刷新失败")
                     self.logger.info(f"trading={self.trading}")
             except Exception as e:
                 self.logger.error(f"页面刷新失败")
-            finally:
                 # 无论是否执行刷新都安排下一次（确保循环持续）
                 if hasattr(self, 'refresh_page_timer') and self.refresh_page_timer:
                     try:
@@ -1447,8 +1446,7 @@ class CryptoTrader:
                         self.logger.error(f"取消旧定时器失败")
                 
                 self.refresh_page_timer = self.root.after(self.refresh_interval, self.refresh_page)
-                
-
+            
     def stop_refresh_page(self):
         """停止页面刷新"""
         with self.refresh_page_lock:
