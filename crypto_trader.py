@@ -1444,7 +1444,7 @@ class CryptoTrader:
                         self.root.after_cancel(self.refresh_page_timer)
                     except Exception as e:
                         self.logger.error(f"取消旧定时器失败")
-                
+            finally:
                 self.refresh_page_timer = self.root.after(self.refresh_interval, self.refresh_page)
             
     def stop_refresh_page(self):
