@@ -159,9 +159,3 @@ class XPathConfig:
         '//p[contains(text(), "above")]', 
         '//a//p[contains(text(), "above")]' 
     ]
-
-    # 25. I accept button
-    ACCEPT_BUTTON = [
-        '//button[contains(text(), "I Accept")]',
-        '//*[@id="username-review-modal"]/div[3]/button[1]'
-    ]

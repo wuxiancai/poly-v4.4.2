@@ -51,8 +51,6 @@ brew update
 echo "安装 Python 3.9..."
 brew install python@3.9 --force
 brew link --force --overwrite python@3.9
-brew install tesseract
-brew install tesseract-lang
 
 # 安装 python-tk@3.9 (自动模式)
 brew install python-tk@3.9 --force
@@ -71,10 +69,6 @@ python3.9 -m pip install --upgrade pip
 echo "安装依赖..."
 pip3 install --no-cache-dir selenium
 pip3 install --no-cache-dir pyautogui
-pip3 install --no-cache-dir opencv-python-headless  # 安装headless版本，通常更稳定
-pip3 install --no-cache-dir pillow 
-pip3 install --no-cache-dir pytesseract
-pip3 install --no-cache-dir numpy
 pip3 install --no-cache-dir screeninfo
 
 # 配置 Python 环境变量 (避免重复添加)

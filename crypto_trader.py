@@ -14,7 +14,6 @@ import threading
 import time
 import os
 from screeninfo import get_monitors
-import pytesseract
 import logging
 from datetime import datetime, timezone, timedelta
 import re
@@ -30,9 +29,7 @@ import sys
 import logging
 from xpath_config import XPathConfig
 from threading import Thread
-from PIL import Image
-import numpy as np
-import cv2
+
 
 class Logger:
     def __init__(self, name):
@@ -81,7 +78,7 @@ class Logger:
 class CryptoTrader:
     def __init__(self):
         super().__init__()
-        self.logger = Logger('crypto_trader')
+        self.logger = Logger('poly')
         self.driver = None
         self.running = False
         self.trading = False
@@ -251,7 +248,7 @@ class CryptoTrader:
             self.logger.error(f"保存配置失败: {str(e)}")
             raise
 
-    """从这里开始设置 GUI 直到 761 行"""
+    """从这里开始设置 GUI 直到 784 行"""
     def setup_gui(self):
         self.root = tk.Tk()
         self.root.title("Polymarket automatic trading")
@@ -417,8 +414,7 @@ class CryptoTrader:
             settings_container.grid_columnconfigure(i, weight=1)
 
         """设置窗口大小和位置"""
-
-        window_width = 480
+        window_width = 470
         window_height = 800
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
@@ -429,7 +425,7 @@ class CryptoTrader:
         # 监控网站配置
         url_frame = ttk.LabelFrame(scrollable_frame, text="Monitoring-Website-Configuration", padding=(2, 2))
         url_frame.pack(fill="x", padx=10, pady=5)
-        ttk.Label(url_frame, text="Add:", font=('Arial', 10)).grid(row=0, column=0, padx=5, pady=5)
+        ttk.Label(url_frame, text="WEB:", font=('Arial', 10)).grid(row=0, column=0, padx=5, pady=5)
         
         # 创建下拉列和输入框组合控件
         self.url_entry = ttk.Combobox(url_frame, width=40)
@@ -462,12 +458,12 @@ class CryptoTrader:
         self.stop_button.pack(side=tk.LEFT, padx=1)
         self.stop_button['state'] = 'disabled'
         
-        # 更新下单金额按钮
-        self.update_amount_button = ttk.Button(button_frame, text="Update-Amount", 
+        # 设置金额按钮
+        self.set_amount_button = ttk.Button(button_frame, text="Set-Amount", 
                                              command=self.set_yes_no_cash, width=12,
                                              style='Black.TButton')  # 默认使用黑色文字
-        self.update_amount_button.pack(side=tk.LEFT, padx=1)
-        self.update_amount_button['state'] = 'disabled'  # 初始禁用
+        self.set_amount_button.pack(side=tk.LEFT, padx=1)
+        self.set_amount_button['state'] = 'disabled'  # 初始禁用
 
         # 添加价格按钮
         prices = ['0.54', '0.55']
@@ -507,12 +503,12 @@ class CryptoTrader:
         # Yes实时价格显示
         self.yes_price_label = ttk.Label(prices_container, text="Yes: waiting...", 
                                         font=('Arial', 18), foreground='#9370DB')
-        self.yes_price_label.pack(side=tk.LEFT, padx=20)
+        self.yes_price_label.pack(side=tk.LEFT, padx=18)
         
         # No实时价格显示
         self.no_price_label = ttk.Label(prices_container, text="No: waiting...", 
                                        font=('Arial', 18), foreground='#9370DB')
-        self.no_price_label.pack(side=tk.LEFT, padx=20)
+        self.no_price_label.pack(side=tk.LEFT, padx=18)
         
         # 最后更新时间 - 靠右下对齐
         self.last_update_label = ttk.Label(price_frame, text="Last-Update: --", 
@@ -530,12 +526,12 @@ class CryptoTrader:
         # Portfolio显示
         self.portfolio_label = ttk.Label(balance_container, text="Portfolio: waiting...", 
                                         font=('Arial', 18), foreground='#9370DB') # 修改为绿色
-        self.portfolio_label.pack(side=tk.LEFT, padx=20)
+        self.portfolio_label.pack(side=tk.LEFT, padx=18)
         
         # Cash显示
         self.cash_label = ttk.Label(balance_container, text="Cash: waiting...", 
                                    font=('Arial', 18), foreground='#9370DB') # 修改为绿色
-        self.cash_label.pack(side=tk.LEFT, padx=20)
+        self.cash_label.pack(side=tk.LEFT, padx=18)
         
         # 最后更新时间 - 靠右下对齐
         self.balance_update_label = ttk.Label(balance_frame, text="Last-Update: --", 
@@ -785,9 +781,9 @@ class CryptoTrader:
         copyright_label = ttk.Label(scrollable_frame, text="Powered by 无为 Copyright 2024",
                                    font=('Arial', 12), foreground='gray')
         copyright_label.pack(pady=(0, 5))  # 上边距0，下距5
-    """以上代码从240行到 761 行是设置 GUI 界面的"""
+    """以上代码从240行到 784 行是设置 GUI 界面的"""
 
-    """以下代码从 763 行到行是程序交易逻辑"""
+    """以下代码从 785 行到行是程序交易逻辑"""
     def start_monitoring(self):
         """开始监控"""
         # 直接使用当前显示的网址
@@ -812,8 +808,8 @@ class CryptoTrader:
         self.running = True
         self.update_status("monitoring...")
 
-        # 启用更金额按钮
-        self.update_amount_button['state'] = 'normal'
+        # 启用设置金额按钮
+        self.set_amount_button['state'] = 'normal'
         # 启动页面刷新
         self.root.after(40000, self.refresh_page)
         # 启动登录状态监控
@@ -821,12 +817,8 @@ class CryptoTrader:
         # 启动URL监控
         self.root.after(30000, self.start_url_monitoring)
         # 启动自动找币
-        self.root.after(50000, self.start_auto_find_coin)
-        
+        self.root.after(60000, self.start_auto_find_coin)
     
-    """以下代码是:threading.Thread(target=self._start_browser_monitoring, 
-    args=(self.target_url,), daemon=True).start()线程启动后执行的函数,直到 995 行"""
-
     def _start_browser_monitoring(self, new_url):
         """在新线程中执行浏览器操作"""
         try:
@@ -1099,7 +1091,7 @@ class CryptoTrader:
     def try_update_amount(self, current_retry=0):
         """尝试设置金额"""
         try:
-            self.update_amount_button.invoke()
+            self.set_amount_button.invoke()
             self.root.after(1000, lambda: self.check_amount_and_set_price(current_retry))
         except Exception as e:
             self.logger.error(f"更新金额操作失败 (尝试 {current_retry + 1}/15): {str(e)}")
@@ -1224,7 +1216,7 @@ class CryptoTrader:
         self.retry_timer = self.root.after(3000, self.set_yes_no_cash)  # 3秒后重试
     """以上代码执行了设置 YES/NO 金额的函数,从 1000 行到 1127 行,程序执行返回到 745 行"""
 
-    """以下代码是启动 URL 监控和登录状态监控的函数,直到第 1230 行"""
+    """以下代码是启动 URL 监控和登录状态监控的函数,直到第 1426 行"""
     def start_url_monitoring(self):
         """启动URL监控"""
         with self.url_monitoring_lock:
@@ -1473,7 +1465,7 @@ class CryptoTrader:
             self.logger.info("❌ 刷新状态已停止")
     """以上代码执行了登录操作的函数,直到第 1315 行,程序执行返回到 748 行"""
    
-    """以下代码是监控买卖条件及执行交易的函数,程序开始进入交易阶段,从 1321 行直到第 2500 行"""  
+    """以下代码是监控买卖条件及执行交易的函数,程序开始进入交易阶段,从 1468 行直到第 2224200 行"""  
     def First_trade(self):
         try:
             if self.find_login_button():
@@ -2247,9 +2239,9 @@ class CryptoTrader:
             self.logger.warning("卖出only_sell_no验证失败,重试")
             return self.only_sell_no()
         
-    """以上代码是交易主体函数 1-4,从第 1370 行到第 2237行"""
+    """以上代码是交易主体函数 1-4,从第 1370 行到第 2242行"""
 
-    """以下代码是交易过程中的各种方法函数，涉及到按钮的点击，从第 2029 行到第 2295 行"""
+    """以下代码是交易过程中的各种方法函数，涉及到按钮的点击，从第 2244 行到第 2528 行"""
     def click_buy_confirm_button(self):
         try:
             buy_confirm_button = self.driver.find_element(By.XPATH, XPathConfig.BUY_CONFIRM_BUTTON)
@@ -2534,7 +2526,7 @@ class CryptoTrader:
             self.logger.error(f"Amount操作失败: {str(e)}")
             self.update_status(f"Amount操作失败: {str(e)}")
 
-    """以下代码是交易过程中的功能性函数,买卖及确认买卖成功,从第 2295 行到第 2573 行"""
+    """以下代码是交易过程中的功能性函数,买卖及确认买卖成功,从第 2529 行到第 2703 行"""
     def Verify_buy_yes(self):
         """
         验证交易是否成功完成Returns:bool: 交易是否成功
@@ -2708,8 +2700,7 @@ class CryptoTrader:
         except Exception as e:
             self.logger.warning(f"Verify_sold_no执行失败: {str(e)}")
             return False
-        
-    """以下代码是程序重启功能,从第 2548 行到第 2651 行"""
+    
     def restart_program(self):
         """重启程序,保持浏览器打开"""
         try:
@@ -2878,7 +2869,7 @@ class CryptoTrader:
             self.start_button['state'] = 'normal'
             self.stop_button['state'] = 'disabled'
             self.update_status("监控已停止")
-            self.update_amount_button['state'] = 'disabled'  # 禁用更新金额按钮
+            self.set_amount_button['state'] = 'disabled'  # 禁用更新金额按钮
             
             # 将"停止监控"文字变为红色
             self.stop_button.configure(style='Red.TButton')
@@ -2905,7 +2896,7 @@ class CryptoTrader:
         
         # 更新状态标签，如果是错误则显示红色
         self.status_label.config(
-            text=f"状态: {message}",
+            text=f"Status: {message}",
             foreground='red' if is_error else 'black'
         )
         
@@ -2924,8 +2915,8 @@ class CryptoTrader:
                     time.sleep(self.retry_interval)
                 else:
                     raise
-    """以下代码是自动找币功能,从第 2981 行到第 3000 行"""
 
+    """以下代码是自动找币功能,从第 2981 行到第 35320 行"""
     # 自动找币第一步:判断是否持仓,是否到了找币时间
     def find_position_label_yes(self):
         """查找Yes持仓标签"""
@@ -3022,16 +3013,15 @@ class CryptoTrader:
         return None
     
     def is_auto_find_54_coin_time(self):
-        """判断是否处于自动找币时段(周六3点至周五20点)"""
-        
+        """判断是否处于自动找币时段(周六2点至周五20点)"""
         try:
             beijing_tz = timezone(timedelta(hours=8))
             now = datetime.now(timezone.utc).astimezone(beijing_tz)
             
             # 周六判断（weekday=5）
             if now.weekday() == 5:
-                # 周六3点至23:59
-                if now.hour >= 3:
+                # 周六2点至23:59
+                if now.hour >= 2:
                     self.logger.info("✅ 当前处于找币时段")
                     return True
             
@@ -3075,7 +3065,6 @@ class CryptoTrader:
     def contrast_portfolio_cash(self):
         """对比持仓币对和现金"""
         try:
-            
             try:
                 # 检查portfolio_value和cash_value是否已经存在并且是字符串
                 if hasattr(self, 'portfolio_value') and hasattr(self, 'cash_value'):
@@ -3094,7 +3083,7 @@ class CryptoTrader:
                     
                     value = round(portfolio_value - cash_value, 2)
                     
-                    if value > 0.5:
+                    if value > 0.6:
                         self.logger.info(f"{value}>0,✅ 有持仓")
                         return True
                     else:
@@ -3120,13 +3109,13 @@ class CryptoTrader:
             self.stop_url_monitoring()
             self.stop_refresh_page()
             self.start_auto_find_coin_running = True
+
             if self.find_login_button():
                 self.logger.warning("检测到❌未登录状态，执行登录")
                 self.check_and_handle_login()
             # 有持仓,点击 PORTFOLIO_BUTTON按钮,打开币对
             try: 
                 portfolio_button = self.driver.find_element(By.XPATH, XPathConfig.PORTFOLIO_BUTTON)
-                self.logger.info(f"点击Portfolio按钮: {portfolio_button}")
                 portfolio_button.click()
                 time.sleep(1)
             except Exception as e: 
@@ -3150,7 +3139,6 @@ class CryptoTrader:
             # 点击 FIND_PORTFOLIO_COIN_BUTTON按钮,打开持仓详情页
             try:
                 find_portfolio_coin_button = self.driver.find_element(By.XPATH, XPathConfig.FIND_PORTFOLIO_COIN_BUTTON)
-                self.logger.info(f"点击FIND_PORTFOLIO_COIN_BUTTON按钮: {find_portfolio_coin_button}")
                 find_portfolio_coin_button.click()
                 
             except Exception as e: 
@@ -3178,7 +3166,7 @@ class CryptoTrader:
             current_url = self.extract_base_url(base_url)
             self.config['website']['url'] = current_url
             self.save_config()
-            self.logger.info(f"已保存当前 URL 到 config: {current_url}")
+            self.logger.info(f"已保存{current_url}到config.json")
 
             # 把保存到config的url放到self.url_entry中
             # 保存前,先清除现有的url
@@ -3201,37 +3189,19 @@ class CryptoTrader:
                 self.start_auto_find_coin_running = False
 
     def find_54_coin(self):
-        """自动找币"""
+        """自动找币,线程名:self.auto_find_coin_timer"""
         self.logger.info("✅ 当前没有持仓,开始自动找币")
         try:
             self.stop_url_monitoring()
             self.stop_refresh_page()
             self.start_auto_find_coin_running = True
-            # 检查driver是否存在
-            if not hasattr(self, 'driver') or self.driver is None:
-                self.logger.error("浏览器驱动不存在，无法执行自动找币")
-                self.root.after(2000, self.find_54_coin)
-                return
+            
             if self.find_login_button():
                 self.logger.warning("检测到❌未登录状态，执行登录")
                 self.check_and_handle_login()
 
             # 保存原始窗口句柄，确保在整个过程中有一个稳定的引用
-            try:
-                self.original_window = self.driver.current_window_handle
-            except Exception as e:
-                self.logger.error(f"获取窗口句柄失败: {str(e)}")
-                # 尝试重新初始化浏览器
-                try:
-                    self._start_browser_monitoring(self.target_url)
-                    self.logger.info("已重新初始化浏览器")
-                    time.sleep(3)
-                    self.original_window = self.driver.current_window_handle
-                except Exception as e:
-                    self.logger.error(f"重新初始化浏览器失败: {str(e)}")
-                    # 安排下一次尝试
-                    self.root.after(2000, self.find_54_coin)
-                    return
+            self.original_window = self.driver.current_window_handle
             
             # 设置搜索关键词
             coins = [
@@ -3245,43 +3215,8 @@ class CryptoTrader:
                     coin_new_weekly_url = self.find_new_weekly_url(coin)
                     
                     if coin_new_weekly_url:
-                        
-                        # 打开新标签页
-                        self.driver.switch_to.new_window('tab')
                         self.driver.get(coin_new_weekly_url)
 
-                        # 等待页面加载完成 - 使用显式等待代替time.sleep
-                        try:
-                            WebDriverWait(self.driver, 20).until(
-                                EC.presence_of_element_located((By.TAG_NAME, "body"))
-                            )
-                            # 使用短暂等待代替长时间sleep,等待 5 秒
-                            for _ in range(50):  # 分成30次小等待，每次0.1秒
-                                if self.stop_auto_find_running:
-                                    break
-                                time.sleep(0.1)
-
-                        except Exception as e:
-                            self.logger.error(f"等待页面加载失败: {str(e)}")
-
-                        if self.trading == True:
-                            # 正在交易,等待交易结束
-                            time.sleep(50)
-                            # 保存当前 URL 到 config
-                            self.config['website']['url'] = coin_new_weekly_url
-                            self.save_config()
-                            self.logger.info(f"✅ {coin}:符合要求,已保存到 config")
-
-                            # 把保存到config的url放到self.url_entry中
-                            # 保存前,先清楚现有的url
-                            self.url_entry.delete(0, tk.END)
-                            self.url_entry.insert(0, coin_new_weekly_url)
-                            self.target_url = self.url_entry.get()
-                            self.logger.info(f"✅ {self.target_url}:已插入到  GUI 界面上的 url_entry 中")
-
-                            self.start_url_monitoring()
-                            self.refresh_page()
-                            self.stop_auto_find_coin()
                         # 获取Yes和No的价格
                         prices = self.driver.execute_script("""
                             function getPrices() {
@@ -3309,7 +3244,7 @@ class CryptoTrader:
                             no_price = float(prices['no'])
 
                         # 判断 YES 和 NO 价格是否在 48-56 之间
-                        if (46 <= yes_price <= 56 or 46 <= no_price <= 56):
+                        if (46 <= yes_price <= 56) or (46 <= no_price <= 56):
                             # 保存当前 URL 到 config
                             self.config['website']['url'] = coin_new_weekly_url
                             self.save_config()
@@ -3321,35 +3256,18 @@ class CryptoTrader:
                             self.url_entry.insert(0, coin_new_weekly_url)
 
                             self.target_url = self.url_entry.get()
-                            self.logger.info(f"✅ {self.target_url}:已插入到  GUI 界面上的 url_entry 中")
-
-                            # 保存当前窗口句柄
-                            current_window = self.driver.current_window_handle
-                            # 切换回原始窗口
-                            self.driver.switch_to.window(self.original_window)
-                            # 关闭当前窗口
-                            self.driver.close()
-                            # 切换回当前窗口
-                            self.driver.switch_to.window(current_window)
-                        
+                            self.logger.info(f"✅ {self.target_url} 已插入到主界面上")
+                            self.start_url_monitoring()
+                            self.refresh_page()
+                            self.stop_auto_find_coin()  
+                            return
                         else:
-                            self.logger.info(f"{coin}: YES{int(yes_price)}¢|NO{int(no_price)}¢❌ 不符合要求")
-                            # 关闭当前页面
-                            self.driver.close()
-                            # 切换回原始窗口
-                            self.driver.switch_to.window(self.original_window)       
-                    else:
-                        self.logger.warning(f"未找到{coin}的周合约URL")
+                            self.logger.info(f"{coin}: YES{int(yes_price)}¢|NO{int(no_price)}¢❌ 不符合要求")           
+
                 except Exception as e:
                     self.logger.error(f"处理{coin}时出错: {str(e)}")
                     # 尝试恢复到原始窗口并继续下一个币种
                     try:
-                        # 确保我们关闭了所有可能打开的新标签页
-                        current_handles = self.driver.window_handles
-                        for handle in current_handles:
-                            if handle != self.original_window:
-                                self.driver.switch_to.window(handle)
-                                self.driver.close()
                         # 切换回原始窗口
                         self.driver.switch_to.window(self.original_window)
                     except Exception as inner_e:
@@ -3358,16 +3276,15 @@ class CryptoTrader:
                         self._start_browser_monitoring(self.target_url)
                         break  # 中断循环，避免继续出错
             
-            self.root.after(10000, self.refresh_page)
             self.root.after(5000, self.start_url_monitoring)
             self.start_auto_find_coin_running = False
             # 增加 10 分钟后再次找币
-            self.root.after(600000, self.start_auto_find_coin)
+            self.root.after(self.refresh_interval, self.start_auto_find_coin)
             self.logger.info("10分钟后再次找币")
 
         except Exception as e:
             self.logger.error(f"自动找币异常: {str(e)}")
-            self.root.after(600000, self.start_auto_find_coin)
+            self.root.after(self.refresh_interval, self.start_auto_find_coin)
 
     def stop_auto_find_coin(self):
         """停止自动找币"""
@@ -3392,12 +3309,9 @@ class CryptoTrader:
         try:
             if self.trading:
                 return
-            # 保存原始窗口句柄 - 使用实例变量而不是局部变量
-            if not hasattr(self, 'original_window') or not self.original_window:
-                self.original_window = self.driver.current_window_handle
             
             # 保存当前窗口句柄作为局部变量，用于本方法内部使用
-            current_tab = self.driver.current_window_handle
+            original_tab = self.driver.current_window_handle
 
             # 重置所有按钮样式为蓝色
             for btn in [self.btc_button, self.eth_button, self.solana_button, 
@@ -3441,7 +3355,7 @@ class CryptoTrader:
                 # 关闭搜索标签页
                 self.driver.close()
                 # 切换回原始窗口
-                self.driver.switch_to.window(current_tab)
+                self.driver.switch_to.window(original_tab)
                 return None
             try:
                 # 使用确定的XPath查找搜索框
@@ -3524,20 +3438,23 @@ class CryptoTrader:
                         self.url_entry.delete(0, tk.END)
                         self.url_entry.insert(0, new_weekly_url)
                         self.target_url = self.url_entry.get()
-                        self.logger.info(f"✅ {self.target_url}:已插入到  GUI 界面上的 url_entry 中")
+                        self.logger.info(f"✅ {self.target_url}:已插入到主界面上")
 
                         self.target_url_window = self.driver.current_window_handle
-                        time.sleep(8)
+                        time.sleep(3)
+
+                        # 关闭原始和搜索窗口
                         self.driver.switch_to.window(search_tab)
                         self.driver.close()
-                        self.driver.switch_to.window(current_tab)
+                        self.driver.switch_to.window(original_tab)
                         self.driver.close()
                         self.driver.switch_to.window(self.target_url_window)
 
                         self.start_url_monitoring()
                         self.refresh_page()
-                        
                         self.stop_auto_find_coin()
+
+                        return False
                     else:
                         # 关闭当前详情URL标签页
                         self.driver.close()
@@ -3549,7 +3466,7 @@ class CryptoTrader:
                         self.driver.close()
                         
                         # 切换回原始窗口
-                        self.driver.switch_to.window(current_tab)
+                        self.driver.switch_to.window(original_tab)
                         
                         return new_weekly_url
                 else:
@@ -3557,7 +3474,7 @@ class CryptoTrader:
                     # 关闭搜索标签页
                     self.driver.close()
                     # 切换回原始窗口
-                    self.driver.switch_to.window(current_tab)
+                    self.driver.switch_to.window(original_tab)
                     return None
                 
             except NoSuchElementException as e:
@@ -3565,27 +3482,11 @@ class CryptoTrader:
                 # 关闭搜索标签页
                 self.driver.close()
                 # 切换回原始窗口
-                self.driver.switch_to.window(current_tab)
+                self.driver.switch_to.window(original_tab)
                 return None
+            
         except Exception as e:
             self.logger.error(f"操作失败: {str(e)}")
-            # 尝试恢复到原始窗口
-            try:
-                # 获取所有窗口句柄
-                all_handles = self.driver.window_handles
-                
-                # 关闭除原始窗口外的所有标签页
-                for handle in all_handles:
-                    if handle != current_tab:
-                        self.driver.switch_to.window(handle)
-                        self.driver.close()
-                
-                # 切换回原始窗口
-                self.driver.switch_to.window(current_tab)
-            except Exception as inner_e:
-                self.logger.error(f"恢复窗口时出错: {str(inner_e)}")
-            
-            return None
         
     def _find_element_with_retry(self, xpaths, timeout=3, silent=False):
         """优化版XPATH元素查找(增强空值处理)"""
